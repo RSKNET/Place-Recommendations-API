@@ -25,9 +25,7 @@ const fetchData = () => {
             sites: item.sites,
             travel: travelUrl,
             travel1: travelUrl,
-            images:
-              item.images ||
-              `https://exrnxuf9n9arrzkl.public.blob.vercel-storage.com/images/${item.place_id}.jpg`,
+            images: item.images || '',
           };
         });
         resolve(formattedData);
