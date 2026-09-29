@@ -10,6 +10,8 @@
 # Ignore the Images directory
 /Images/
 
+/images raw
+
 .agents
 skills-lock.json
 
