@@ -9,6 +9,7 @@ dotenv.config({ path: fs.existsSync(envLocalPath) ? envLocalPath : envPath });
 
 const CSV_FILE_PATH = path.join(__dirname, '..', 'data', 'Place-Data.csv');
 const STATE_FILE_PATH = path.join(__dirname, '..', 'data', 'sync-state.json');
+const IMAGES_DIR = path.join(__dirname, '..', 'Website UI', 'images');
 
 const readCsv = (filePath) => {
   return new Promise((resolve, reject) => {
@@ -56,12 +57,11 @@ const writeCsv = (filePath, rows) => {
 const readState = (filePath) => {
   try {
     if (!fs.existsSync(filePath)) {
-      return { last_place_id: '' };
+      return { last_place_id: '', last_updated: '' };
     }
-    const content = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(content);
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch {
-    return { last_place_id: '' };
+    return { last_place_id: '', last_updated: '' };
   }
 };
 
@@ -69,7 +69,7 @@ const writeState = (filePath, state) => {
   fs.writeFileSync(filePath, JSON.stringify(state, null, 2) + '\n', 'utf8');
 };
 
-const fetchPhotoUri = async (apiKey, photoName) => {
+const savePhoto = async (apiKey, photoName, placeId) => {
   try {
     const url = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=800&maxWidthPx=800&key=${apiKey}&skipHttpRedirect=true`;
     const response = await fetch(url);
@@ -77,13 +77,24 @@ const fetchPhotoUri = async (apiKey, photoName) => {
       return '';
     }
     const data = await response.json();
-    return data.photoUri || '';
+    if (!data.photoUri) {
+      return '';
+    }
+    const webpUrl = data.photoUri.replace(/=.*$/, '=w800-rw');
+    const imgResponse = await fetch(webpUrl);
+    if (!imgResponse.ok) {
+      return '';
+    }
+    const buffer = Buffer.from(await imgResponse.arrayBuffer());
+    const dest = path.join(IMAGES_DIR, `${placeId}.webp`);
+    fs.writeFileSync(dest, buffer);
+    return `/images/${placeId}.webp`;
   } catch {
     return '';
   }
 };
 
-const fetchPlaceDetails = async (apiKey, placeName, cityName) => {
+const fetchPlaceDetails = async (apiKey, placeName, cityName, placeId) => {
   try {
     const url = 'https://places.googleapis.com/v1/places:searchText';
     const response = await fetch(url, {
@@ -109,9 +120,9 @@ const fetchPlaceDetails = async (apiKey, placeName, cityName) => {
     }
 
     const place = result.places[0];
-    let photoUri = '';
+    let imagePath = '';
     if (place.photos && place.photos.length > 0) {
-      photoUri = await fetchPhotoUri(apiKey, place.photos[0].name);
+      imagePath = await savePhoto(apiKey, place.photos[0].name, placeId);
     }
 
     return {
@@ -119,17 +130,21 @@ const fetchPlaceDetails = async (apiKey, placeName, cityName) => {
       phone: place.nationalPhoneNumber || '',
       sites: place.websiteUri || '',
       price: place.priceLevel || '',
-      images: photoUri,
+      images: imagePath,
     };
   } catch {
     return null;
   }
 };
 
-const sync = async (batchLimit = 100) => {
+const sync = async (batchLimit = 700) => {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
     process.exit(1);
+  }
+
+  if (!fs.existsSync(IMAGES_DIR)) {
+    fs.mkdirSync(IMAGES_DIR, { recursive: true });
   }
 
   const rows = await readCsv(CSV_FILE_PATH);
@@ -154,7 +169,7 @@ const sync = async (batchLimit = 100) => {
     const currentIndex = (startIndex + i) % rows.length;
     const row = rows[currentIndex];
 
-    const details = await fetchPlaceDetails(apiKey, row.place, row.city);
+    const details = await fetchPlaceDetails(apiKey, row.place, row.city, row.place_id);
     if (details) {
       if (details.rating) row.rating = details.rating;
       if (details.phone) row.phone = details.phone;
@@ -172,7 +187,11 @@ const sync = async (batchLimit = 100) => {
   }
 
   writeCsv(CSV_FILE_PATH, rows);
-  writeState(STATE_FILE_PATH, { last_place_id: lastProcessedId });
+  const today = new Date().toISOString().split('T')[0];
+  writeState(STATE_FILE_PATH, {
+    last_place_id: lastProcessedId,
+    last_updated: today,
+  });
 };
 
 const batchArg = process.argv.find((arg) => arg.startsWith('--limit='));

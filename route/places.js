@@ -17,12 +17,14 @@ router.get("/", async (req, res) => {
     res.json({
       error: "false",
       message: "Places fetched successfully",
+      last_updated: fetchData.getLastUpdated(),
       listPlaces: data,
     });
   } catch (error) {
     res.status(500).json({
       error: error.message,
       message: "",
+      last_updated: fetchData.getLastUpdated(),
       listPlaces: [],
     });
   }

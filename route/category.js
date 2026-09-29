@@ -17,6 +17,7 @@ router.get("/", async (req, res) => {
       res.status(404).json({
         error: "true",
         message: `Category '${categoryName}' not found`,
+        last_updated: fetchData.getLastUpdated(),
         listPlaces: [],
       });
     } else {
@@ -30,6 +31,7 @@ router.get("/", async (req, res) => {
       res.json({
         error: "false",
         message: `Places in category '${categoryName}' fetched successfully`,
+        last_updated: fetchData.getLastUpdated(),
         listPlaces: data,
       });
     }
@@ -37,6 +39,7 @@ router.get("/", async (req, res) => {
     res.status(500).json({
       error: error.message,
       message: "",
+      last_updated: fetchData.getLastUpdated(),
       listPlaces: [],
     });
   }

@@ -34,5 +34,20 @@ const fetchData = () => {
   });
 };
 
+const getLastUpdated = () => {
+  try {
+    const statePath = path.join(__dirname, '..', 'data', 'sync-state.json');
+    if (fs.existsSync(statePath)) {
+      const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+      return state.last_updated || '';
+    }
+    return '';
+  } catch {
+    return '';
+  }
+};
+
+fetchData.getLastUpdated = getLastUpdated;
+
 module.exports = fetchData;
 
