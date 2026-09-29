@@ -27,7 +27,7 @@ jobs:
       - name: Run place synchronization
         env:
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
-        run: npm run sync -- --limit=100
+        run: npm run sync -- --limit=700
 
       - name: Commit and push changes
         run: |
@@ -37,5 +37,5 @@ jobs:
           if git diff --staged --quiet; then
             exit 0
           fi
-          git commit -m "chore: auto-sync places data"
+          git commit -m "chore: auto-sync places data [skip ci]"
           git push

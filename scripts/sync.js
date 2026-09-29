@@ -176,6 +176,6 @@ const sync = async (batchLimit = 100) => {
 };
 
 const batchArg = process.argv.find((arg) => arg.startsWith('--limit='));
-const limit = batchArg ? parseInt(batchArg.split('=')[1], 10) : 100;
+const limit = batchArg ? parseInt(batchArg.split('=')[1], 10) : 700;
 
 sync(limit).catch(() => process.exit(1));
