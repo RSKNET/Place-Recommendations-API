@@ -2,6 +2,7 @@
 /node_modules/
 
 .env
+.env.local
 
 # Ignore the Dataset directory
 /Dataset/
@@ -11,3 +12,5 @@
 
 .agents
 skills-lock.json
+
+STANDART.md

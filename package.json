@@ -4,8 +4,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "",
-    "node": "nodemon index.js"
+    "start": "node index.js",
+    "node": "nodemon index.js",
+    "sync": "node scripts/sync.js"
   },
   "keywords": [],
   "author": "",
