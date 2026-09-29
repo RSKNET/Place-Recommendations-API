@@ -8,6 +8,7 @@ const allCategoriesRouter = require("./route/allcategory");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.enable("trust proxy");
 app.use(cors());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");

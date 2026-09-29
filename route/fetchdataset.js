@@ -2,9 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
 
-const fetchData = () => {
+const fetchData = (req) => {
   const results = [];
   const csvFilePath = path.join(__dirname, '..', 'data', 'Place-Data.csv');
+  const protocol = req ? req.headers['x-forwarded-proto'] || req.protocol : '';
+  const host = req ? req.headers['x-forwarded-host'] || req.get('host') : '';
+  const baseUrl = protocol && host ? `${protocol}://${host}` : '';
 
   return new Promise((resolve, reject) => {
     fs.createReadStream(csvFilePath)
@@ -13,6 +16,10 @@ const fetchData = () => {
       .on('end', () => {
         const formattedData = results.map((item) => {
           const travelUrl = item.travel || `https://www.google.com/search?q=open+trip+${encodeURIComponent(item.place)}`;
+          let imageUrl = item.images || '';
+          if (imageUrl.startsWith('/') && baseUrl) {
+            imageUrl = `${baseUrl}${imageUrl}`;
+          }
           return {
             place_id: item.place_id,
             rating: parseFloat(item.rating || 0),
@@ -25,7 +32,7 @@ const fetchData = () => {
             sites: item.sites,
             travel: travelUrl,
             travel1: travelUrl,
-            images: item.images || '',
+            images: imageUrl,
           };
         });
         resolve(formattedData);

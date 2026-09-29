@@ -7,7 +7,7 @@ router.get("/", async (req, res) => {
   const categoryName = req.query.category;
 
   try {
-    let data = await fetchData();
+    let data = await fetchData(req);
 
     data = data.filter(
       (place) => place.category.toLowerCase() === categoryName.toLowerCase()

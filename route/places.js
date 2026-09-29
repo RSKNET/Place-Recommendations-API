@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    let data = await fetchData();
+    let data = await fetchData(req);
 
     data.sort((a, b) => {
       if (b.rating !== a.rating) {
